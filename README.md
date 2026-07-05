@@ -58,7 +58,7 @@ Make sure you have [Node.js](https://nodejs.org/) installed (v16+ recommended).
 
 1. **Clone the Repository:**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Rajdeep1060/varaha-assignment.git
    cd varaha-assignment
    ```
 
