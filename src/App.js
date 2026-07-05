@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import * as turf from '@turf/turf';
 import { 
   Map, 
@@ -18,6 +18,7 @@ import './App.css';
 import MapContainer from './MapContainer';
 
 const App = () => {
+  const fileInputRef = useRef(null);
   const [markers, setMarkers] = useState([]);
   const [polygonVertices, setPolygonVertices] = useState([]);
   const [interactionMode, setInteractionMode] = useState('navigation');
@@ -132,11 +133,129 @@ const App = () => {
   }, []);
 
   const handleExportGeoJSON = () => {
-    showToast('Export will be enabled in next step');
+    const features = [];
+    markers.forEach((m, idx) => {
+      features.push({
+        type: 'Feature',
+        properties: {
+          name: `Marker #${idx + 1}`,
+          type: 'marker',
+          id: m.id
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [m.lng, m.lat]
+        }
+      });
+    });
+
+    if (polygonVertices.length >= 3) {
+      features.push({
+        type: 'Feature',
+        properties: {
+          name: 'Custom Polygon Area',
+          type: 'polygon',
+          areaSquareMeters: polygonArea
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[...polygonVertices, polygonVertices[0]]]
+        }
+      });
+    } else if (polygonVertices.length === 2) {
+      features.push({
+        type: 'Feature',
+        properties: {
+          name: 'Incomplete Polygon Path',
+          type: 'linestring'
+        },
+        geometry: {
+          type: 'LineString',
+          coordinates: polygonVertices
+        }
+      });
+    } else if (polygonVertices.length === 1) {
+      features.push({
+        type: 'Feature',
+        properties: {
+          name: 'Incomplete Polygon Vertex',
+          type: 'vertex'
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: polygonVertices[0]
+        }
+      });
+    }
+
+    const geojson = {
+      type: 'FeatureCollection',
+      features
+    };
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(geojson, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `map_state_${Date.now()}.geojson`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    showToast('Exported GeoJSON file');
   };
 
-  const handleImportGeoJSON = () => {
-    showToast('Import will be enabled in next step');
+  const handleImportGeoJSON = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const geojson = JSON.parse(event.target.result);
+        if (geojson.type !== 'FeatureCollection' || !Array.isArray(geojson.features)) {
+          showToast('Invalid GeoJSON format');
+          return;
+        }
+
+        const newMarkers = [];
+        let newVertices = [];
+
+        geojson.features.forEach((feature) => {
+          if (!feature.geometry) return;
+
+          if (feature.geometry.type === 'Point' && feature.properties?.type === 'marker') {
+            const [lng, lat] = feature.geometry.coordinates;
+            newMarkers.push({
+              id: feature.properties.id || `marker-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              lng,
+              lat
+            });
+          } else if (feature.geometry.type === 'Polygon') {
+            const ring = feature.geometry.coordinates[0];
+            newVertices = ring.slice(0, ring.length - 1);
+          } else if (feature.geometry.type === 'LineString') {
+            newVertices = feature.geometry.coordinates;
+          }
+        });
+
+        if (newMarkers.length > 0 || newVertices.length > 0) {
+          setMarkers(newMarkers);
+          setPolygonVertices(newVertices);
+          showToast(`Imported map state`);
+
+          if (newMarkers.length > 0) {
+            setFlyToCoords([newMarkers[0].lng, newMarkers[0].lat]);
+          } else if (newVertices.length > 0) {
+            setFlyToCoords(newVertices[0]);
+          }
+        } else {
+          showToast('No relevant elements found in file');
+        }
+      } catch (err) {
+        showToast('Error reading GeoJSON file');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = null;
   };
 
   const formatArea = (area) => {
@@ -302,8 +421,17 @@ const App = () => {
               <button className="secondary-btn" onClick={handleExportGeoJSON}>
                 <Download size={14} /> Export
               </button>
-              <button className="secondary-btn" onClick={handleImportGeoJSON}>
-                <Upload size={14} /> Import
+              <button className="secondary-btn">
+                <label className="import-btn-label">
+                  <Upload size={14} /> Import
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    accept=".geojson,.json"
+                    style={{ display: 'none' }}
+                    onChange={handleImportGeoJSON}
+                  />
+                </label>
               </button>
             </div>
 
