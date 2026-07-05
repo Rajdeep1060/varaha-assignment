@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-// 100% Free Style configuration using CARTO Dark Matter raster tiles
 const freeMapStyle = {
   version: 8,
   sources: {
@@ -40,15 +39,13 @@ const MapContainer = ({
 }) => {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
-  const markersRef = useRef([]); // Keeps track of maplibregl.Marker: [{ id, markerInstance }]
+  const markersRef = useRef([]);
   const interactionModeRef = useRef(interactionMode);
 
-  // Keep interaction mode updated inside callbacks to avoid stale closure issues
   useEffect(() => {
     interactionModeRef.current = interactionMode;
   }, [interactionMode]);
 
-  // Initialize Maplibre Map
   useEffect(() => {
     if (mapRef.current) return;
 
@@ -65,7 +62,6 @@ const MapContainer = ({
     map.on('load', () => {
       mapRef.current = map;
 
-      // Add sources for Polygon Shape and Polygon Vertices
       map.addSource('polygon-source', {
         type: 'geojson',
         data: {
@@ -82,7 +78,6 @@ const MapContainer = ({
         }
       });
 
-      // Layer 1: Translucent Purple Polygon Fill
       map.addLayer({
         id: 'polygon-fill',
         type: 'fill',
@@ -94,7 +89,6 @@ const MapContainer = ({
         filter: ['==', '$type', 'Polygon']
       });
 
-      // Layer 2: Glowing Cyan Polygon Boundary Line
       map.addLayer({
         id: 'polygon-outline',
         type: 'line',
@@ -110,7 +104,6 @@ const MapContainer = ({
         }
       });
 
-      // Layer 3: Vertices Outer Neon Ring
       map.addLayer({
         id: 'vertices-circle-glow',
         type: 'circle',
@@ -124,7 +117,6 @@ const MapContainer = ({
         }
       });
 
-      // Layer 4: Vertices Inner Dot
       map.addLayer({
         id: 'vertices-circle-inner',
         type: 'circle',
@@ -135,11 +127,9 @@ const MapContainer = ({
         }
       });
 
-      // Refresh layers if data was loaded from localStorage
       updatePolygonLayers(polygonVertices);
     });
 
-    // Handle Map Canvas Clicks
     map.on('click', (e) => {
       const mode = interactionModeRef.current;
       if (mode === 'marker') {
@@ -151,7 +141,6 @@ const MapContainer = ({
 
     return () => {
       if (mapRef.current) {
-        // Clear all active DOM markers
         markersRef.current.forEach(({ markerInstance }) => markerInstance.remove());
         markersRef.current = [];
         mapRef.current.remove();
@@ -161,7 +150,6 @@ const MapContainer = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sync React Markers state array to Maplibre Markers
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -183,13 +171,11 @@ const MapContainer = ({
       if (currentMarkersMap.has(marker.id)) {
         const markerInstance = currentMarkersMap.get(marker.id);
         markerInstance.setLngLat([marker.lng, marker.lat]);
-        // Update popup text if marker index shifted
         const popup = markerInstance.getPopup();
         if (popup) popup.setHTML(popupContent);
         newMarkersList.push({ id: marker.id, markerInstance });
         currentMarkersMap.delete(marker.id);
       } else {
-        // Build custom HTML elements for pulsing neon marker styling
         const el = document.createElement('div');
         el.className = 'custom-marker';
 
@@ -205,7 +191,6 @@ const MapContainer = ({
       }
     });
 
-    // Remove obsolete markers from canvas
     currentMarkersMap.forEach((markerInstance) => {
       markerInstance.remove();
     });
@@ -213,7 +198,6 @@ const MapContainer = ({
     markersRef.current = newMarkersList;
   }, [markers]);
 
-  // GeoJSON Source Helper
   const updatePolygonLayers = (vertices) => {
     const map = mapRef.current;
     if (!map) return;
@@ -222,7 +206,6 @@ const MapContainer = ({
     const verticesSource = map.getSource('vertices-source');
     if (!polygonSource || !verticesSource) return;
 
-    // 1. Compile polygon overlay source
     let polygonGeoJson = {
       type: 'FeatureCollection',
       features: []
@@ -256,7 +239,6 @@ const MapContainer = ({
 
     polygonSource.setData(polygonGeoJson);
 
-    // 2. Compile points source for individual vertices
     const verticesGeoJson = {
       type: 'FeatureCollection',
       features: vertices.map((v, i) => ({
@@ -272,12 +254,10 @@ const MapContainer = ({
     verticesSource.setData(verticesGeoJson);
   };
 
-  // Sync React Polygon vertices state to Maplibre Sources
   useEffect(() => {
     updatePolygonLayers(polygonVertices);
   }, [polygonVertices]);
 
-  // Handle sidebar center clicks / camera fly triggers
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !flyToCoords) return;
@@ -293,8 +273,8 @@ const MapContainer = ({
   }, [flyToCoords, onResetFlyTo]);
 
   return (
-    <div className="map-wrapper">
-      <div ref={mapContainerRef} className="map-container" />
+    <div className="position-absolute top-0 start-0 w-100 h-100">
+      <div ref={mapContainerRef} className="w-100 h-100" />
     </div>
   );
 };

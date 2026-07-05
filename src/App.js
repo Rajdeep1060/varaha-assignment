@@ -269,7 +269,6 @@ const App = () => {
         <header className="sidebar-header d-flex align-items-center gap-2 p-3 border-bottom border-glass">
           <Map size={24} style={{ color: 'var(--accent-cyan)' }} />
           <h1 className="m-0 fs-5 fw-bold text-white">VaraMap Studio</h1>
-          <span className="badge rounded-pill bg-info text-dark ms-auto">v1.0</span>
         </header>
 
         <div className="sidebar-content flex-grow-1 overflow-auto p-3 d-flex flex-column gap-3">
@@ -457,7 +456,7 @@ const App = () => {
         </div>
       </aside>
 
-      <div className="flex-grow-1 h-100 w-100 position-relative">
+      <div className="flex-grow-1 position-relative">
         <MapContainer 
           markers={markers}
           polygonVertices={polygonVertices}

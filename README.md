@@ -1,70 +1,96 @@
-# Getting Started with Create React App
+# VaraMap Studio
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+VaraMap Studio is an interactive, responsive, high-aesthetic React web application built for performing basic geospatial operations. It integrates Maplibre GL JS (a 100% free, open-source mapping engine requiring no credentials or payment card sign-ups) alongside Turf.js for real-time area calculations. The UI is built using Bootstrap layout grids and CSS-based Dark Glassmorphism styles.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Key Features
 
-### `npm start`
+### 1. Map Canvas Setup
+- Centered on **AECS Layout, Bangalore, India** (`[77.7125, 12.9645]`) on startup.
+- Uses CARTO's free Dark Matter raster tiles to maintain a premium dark-themed map canvas.
+- Incorporates a 3D-angled map pitch for aesthetic depth.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 2. Interactive Markers
+- **Add Markers:** Click the map canvas in **Marker Mode** to place custom glowing markers featuring a cyan inner core and pulsing animation.
+- **Marker Popups:** Click on any placed marker to see its exact longitude and latitude in a map popup.
+- **Sidebar List:** Track all placed markers in the sidebar. Click any marker in the list to fly the map camera directly to that coordinate.
+- **Individual Deletion:** Delete specific markers directly from the list.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 3. Polygon Drawing & Turf.js Calculations
+- **Draw Vertices:** Click the map canvas in **Draw Mode** to draw polygon vertices.
+- **Visual Feedback:** Renders vertices as glowing dots, drawing connecting lines for 2 vertices and a translucent purple fill layer with cyan outlines for 3+ vertices.
+- **Real-time Area Calculation:** Automatically processes the coordinates with Turf.js (`turf.polygon`, `turf.area`) to output the surface area in real-time in square meters ($m^2$) or square kilometers ($km^2$) if the area is large.
+- **Individual Deletion:** Remove specific vertices from the list to modify shape points in real-time.
 
-### `npm test`
+### 4. Cache Persistence (Save & Load)
+- **Automatic Restore:** Re-reads the browser cache (`localStorage`) on startup and restores the markers, polygon vertices, and map center coordinates from your last session.
+- **Manual Operations:** Access manual **Save** and **Load** triggers in the actions panel to backup or revert changes.
+- **Clear Canvas:** Single-click "Clear Active Map" clears all active markers, polygon overlays, and stats.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 5. GeoJSON Interoperability (Bonus Features)
+- **GeoJSON Export:** Downloads a compiled `.geojson` file representing the current map features (Points for markers, and LineString/Polygon for drawn shapes) directly to your local computer.
+- **GeoJSON Import:** Uploads a `.geojson` file to parse and render markers and polygons onto the active canvas, immediately flying the map camera to focus on the imported data.
 
-### `npm run build`
+### 6. Fully Responsive Design
+- Powered by Bootstrap grids and flex layout properties.
+- **Desktop:** Sidebar dashboard fits on the left side, map occupies the right side.
+- **Mobile/Tablets:** Flex layout stacks elements vertically. The map occupies the top portion ($60\%$ height) and the control sidebar fits in a scrollable bottom section ($40\%$ height) so all tools and visual elements remain accessible simultaneously.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Tech Stack
+- **Framework:** ReactJS
+- **Mapping Engine:** Maplibre GL JS (Open-source fork of Mapbox GL JS)
+- **Tile Provider:** CARTO (Dark Matter Tiles)
+- **Geospatial Processing:** Turf.js
+- **Styling:** Bootstrap v5 (Grid & Spacing utilities) + Vanilla CSS (Glassmorphism card layers)
+- **Icons:** Lucide React
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## Getting Started
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) installed (v16+ recommended).
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Installation & Local Setup
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+1. **Clone the Repository:**
+   ```bash
+   git clone <repository-url>
+   cd varaha-assignment
+   ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+2. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
 
-## Learn More
+3. **Start the Development Server:**
+   You can run the standard React script. To suppress warnings about missing third-party package source maps (from Turf's dependencies) directly in your terminal console, use:
+   - **Windows (PowerShell):**
+     ```powershell
+     $env:GENERATE_SOURCEMAP="false"; npm start
+     ```
+   - **macOS/Linux:**
+     ```bash
+     GENERATE_SOURCEMAP=false npm start
+     ```
+   - **Alternative (Standard):**
+     ```bash
+     npm start
+     ```
+   Open [http://localhost:3000](http://localhost:3000) to view the application in your browser.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+4. **Run Unit Tests:**
+   ```bash
+   npm test
+   ```
+   Runs Jest test cases checking core layout mounting and element availability.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+5. **Build for Production:**
+   ```bash
+   npm run build
+   ```
+   Compiles optimized production builds into the `build` directory.
