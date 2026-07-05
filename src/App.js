@@ -10,9 +10,7 @@ import {
   RefreshCw, 
   Download, 
   Upload, 
-  Info, 
-  Menu, 
-  X 
+  Info 
 } from 'lucide-react';
 import './App.css';
 import MapContainer from './MapContainer';
@@ -26,7 +24,6 @@ const App = () => {
   const [flyToCoords, setFlyToCoords] = useState(null);
   const [polygonArea, setPolygonArea] = useState(0);
   const [toastMessage, setToastMessage] = useState('');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
     if (polygonVertices.length >= 3) {
@@ -123,9 +120,6 @@ const App = () => {
 
   const handleListItemClick = (lng, lat) => {
     setFlyToCoords([lng, lat]);
-    if (window.innerWidth <= 768) {
-      setIsSidebarOpen(false);
-    }
   };
 
   const handleResetFlyTo = useCallback(() => {
@@ -267,103 +261,107 @@ const App = () => {
   };
 
   return (
-    <div className="app-container">
-      <button 
-        className="sidebar-toggle"
-        onClick={() => setIsSidebarOpen(prev => !prev)}
-        aria-label="Toggle Navigation Panel"
+    <div className="container-fluid vh-100 p-0 overflow-hidden d-flex flex-column-reverse flex-md-row">
+      <aside 
+        className="sidebar w-sidebar-md w-100 h-100-md bg-glass border-end border-glass d-flex flex-column" 
+        style={{ height: '40vh' }}
       >
-        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
-
-      <aside className={`sidebar ${isSidebarOpen ? '' : 'collapsed'}`}>
-        <header className="sidebar-header">
+        <header className="sidebar-header d-flex align-items-center gap-2 p-3 border-bottom border-glass">
           <Map size={24} style={{ color: 'var(--accent-cyan)' }} />
-          <h1>VaraMap Studio</h1>
-          <span>v1.0</span>
+          <h1 className="m-0 fs-5 fw-bold text-white">VaraMap Studio</h1>
+          <span className="badge rounded-pill bg-info text-dark ms-auto">v1.0</span>
         </header>
 
-        <div className="sidebar-content">
-          <div className="control-card">
-            <span className="card-title">Interaction Mode</span>
-            <div className="mode-selector">
-              <button 
-                className={`mode-btn ${interactionMode === 'navigation' ? 'active' : ''}`}
-                onClick={() => setInteractionMode('navigation')}
-              >
-                <Navigation size={18} />
-                Navigate
-              </button>
-              <button 
-                className={`mode-btn ${interactionMode === 'marker' ? 'active' : ''}`}
-                onClick={() => setInteractionMode('marker')}
-              >
-                <MapPin size={18} />
-                Add Marker
-              </button>
-              <button 
-                className={`mode-btn ${interactionMode === 'polygon' ? 'active' : ''}`}
-                onClick={() => setInteractionMode('polygon')}
-              >
-                <PenTool size={18} />
-                Draw Poly
-              </button>
-            </div>
-          </div>
-
-          <div className="stats-display">
-            <div className="stat-item">
-              <div className="stat-lbl">Markers placed</div>
-              <div className="stat-val cyan">{markers.length}</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-lbl">Polygon Area</div>
-              <div className="stat-val purple" style={{ fontSize: polygonArea >= 1000000 ? '1rem' : '1.25rem' }}>
-                {formatArea(polygonArea)}
+        <div className="sidebar-content flex-grow-1 overflow-auto p-3 d-flex flex-column gap-3">
+          <div className="control-card p-3 rounded bg-glass border border-glass d-flex flex-column gap-2">
+            <span className="card-title text-secondary small fw-bold text-uppercase tracking-wider">Interaction Mode</span>
+            <div className="mode-selector row g-2">
+              <div className="col-4">
+                <button 
+                  className={`mode-btn w-100 btn border border-glass py-2 d-flex flex-column align-items-center gap-1 ${interactionMode === 'navigation' ? 'active' : ''}`}
+                  onClick={() => setInteractionMode('navigation')}
+                >
+                  <Navigation size={16} />
+                  <span>Navigate</span>
+                </button>
+              </div>
+              <div className="col-4">
+                <button 
+                  className={`mode-btn w-100 btn border border-glass py-2 d-flex flex-column align-items-center gap-1 ${interactionMode === 'marker' ? 'active' : ''}`}
+                  onClick={() => setInteractionMode('marker')}
+                >
+                  <MapPin size={16} />
+                  <span>Marker</span>
+                </button>
+              </div>
+              <div className="col-4">
+                <button 
+                  className={`mode-btn w-100 btn border border-glass py-2 d-flex flex-column align-items-center gap-1 ${interactionMode === 'polygon' ? 'active' : ''}`}
+                  onClick={() => setInteractionMode('polygon')}
+                >
+                  <PenTool size={16} />
+                  <span>Draw</span>
+                </button>
               </div>
             </div>
           </div>
 
-          <div className="control-card" style={{ flex: 1, minHeight: '260px', display: 'flex', flexDirection: 'column' }}>
-            <div className="tabs">
+          <div className="stats-display row g-2">
+            <div className="col-6">
+              <div className="stat-item p-2 rounded bg-glass border border-glass text-center">
+                <div className="stat-lbl text-secondary small">Markers placed</div>
+                <div className="stat-val cyan fs-4 fw-bold">{markers.length}</div>
+              </div>
+            </div>
+            <div className="col-6">
+              <div className="stat-item p-2 rounded bg-glass border border-glass text-center">
+                <div className="stat-lbl text-secondary small">Polygon Area</div>
+                <div className="stat-val purple fs-5 fw-bold mt-1">
+                  {formatArea(polygonArea)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="control-card p-3 rounded bg-glass border border-glass d-flex flex-column flex-grow-1" style={{ minHeight: '220px' }}>
+            <div className="tabs d-flex border-bottom border-glass mb-2">
               <button 
-                className={`tab-btn ${activeTab === 'markers' ? 'active' : ''}`}
+                className={`tab-btn btn btn-link text-decoration-none text-secondary py-2 px-3 fw-bold ${activeTab === 'markers' ? 'active' : ''}`}
                 onClick={() => setActiveTab('markers')}
               >
                 Markers ({markers.length})
               </button>
               <button 
-                className={`tab-btn ${activeTab === 'vertices' ? 'active' : ''}`}
+                className={`tab-btn btn btn-link text-decoration-none text-secondary py-2 px-3 fw-bold ${activeTab === 'vertices' ? 'active' : ''}`}
                 onClick={() => setActiveTab('vertices')}
               >
-                Polygon Vertices ({polygonVertices.length})
+                Vertices ({polygonVertices.length})
               </button>
             </div>
 
-            <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', marginTop: '8px' }}>
+            <div className="flex-grow-1 overflow-auto pe-1" style={{ maxHeight: '180px' }}>
               {activeTab === 'markers' ? (
-                <div className="list-container">
+                <div className="d-flex flex-column gap-2">
                   {markers.length === 0 ? (
-                    <div className="list-empty">
-                      No markers placed yet. Switch to "Add Marker" mode and click on the map.
+                    <div className="text-center text-muted small py-4 border border-dashed border-glass rounded">
+                      No markers placed yet. Switch to "Marker" mode and click on the map.
                     </div>
                   ) : (
                     markers.map((m, idx) => (
                       <div 
                         key={m.id} 
-                        className="list-item"
+                        className="list-item p-2 rounded d-flex align-items-center justify-content-between"
                         onClick={() => handleListItemClick(m.lng, m.lat)}
                       >
-                        <div className="list-item-info">
-                          <span className="list-item-title">Marker #{idx + 1}</span>
-                          <span className="list-item-subtitle">
+                        <div className="d-flex flex-column min-width-0">
+                          <span className="small fw-bold text-white">Marker #{idx + 1}</span>
+                          <span className="small text-secondary font-monospace">
                             {m.lng.toFixed(5)}, {m.lat.toFixed(5)}
                           </span>
                         </div>
                         <button 
                           className="delete-btn"
                           onClick={(e) => handleDeleteMarker(m.id, e)}
-                          title="Remove Marker"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -372,28 +370,27 @@ const App = () => {
                   )}
                 </div>
               ) : (
-                <div className="list-container">
+                <div className="d-flex flex-column gap-2">
                   {polygonVertices.length === 0 ? (
-                    <div className="list-empty">
-                      No polygon vertices drawn yet. Switch to "Draw Poly" mode and click on the map.
+                    <div className="text-center text-muted small py-4 border border-dashed border-glass rounded">
+                      No polygon vertices drawn yet. Switch to "Draw" mode and click on the map.
                     </div>
                   ) : (
                     polygonVertices.map((v, idx) => (
                       <div 
                         key={idx} 
-                        className="list-item"
+                        className="list-item p-2 rounded d-flex align-items-center justify-content-between"
                         onClick={() => handleListItemClick(v[0], v[1])}
                       >
-                        <div className="list-item-info">
-                          <span className="list-item-title">Vertex #{idx + 1}</span>
-                          <span className="list-item-subtitle">
+                        <div className="d-flex flex-column min-width-0">
+                          <span className="small fw-bold text-white">Vertex #{idx + 1}</span>
+                          <span className="small text-secondary font-monospace">
                             {v[0].toFixed(5)}, {v[1].toFixed(5)}
                           </span>
                         </div>
                         <button 
                           className="delete-btn"
                           onClick={(e) => handleDeleteVertex(idx, e)}
-                          title="Remove Vertex"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -405,67 +402,77 @@ const App = () => {
             </div>
           </div>
 
-          <div className="control-card">
-            <span className="card-title">Actions & Operations</span>
+          <div className="control-card p-3 rounded bg-glass border border-glass d-flex flex-column gap-2">
+            <span className="card-title text-secondary small fw-bold text-uppercase tracking-wider">Actions & Operations</span>
             
-            <div className="action-grid" style={{ marginBottom: '8px' }}>
-              <button className="secondary-btn" onClick={handleSaveState}>
-                <Save size={14} /> Save
-              </button>
-              <button className="secondary-btn" onClick={handleLoadState}>
-                <RefreshCw size={14} /> Load
-              </button>
+            <div className="action-grid row g-2">
+              <div className="col-6">
+                <button className="secondary-btn btn w-100 border border-glass py-2" onClick={handleSaveState}>
+                  <Save size={14} className="me-1" /> Save
+                </button>
+              </div>
+              <div className="col-6">
+                <button className="secondary-btn btn w-100 border border-glass py-2" onClick={handleLoadState}>
+                  <RefreshCw size={14} className="me-1" /> Load
+                </button>
+              </div>
             </div>
 
-            <div className="action-grid" style={{ marginBottom: '8px' }}>
-              <button className="secondary-btn" onClick={handleExportGeoJSON}>
-                <Download size={14} /> Export
-              </button>
-              <button className="secondary-btn">
-                <label className="import-btn-label">
-                  <Upload size={14} /> Import
-                  <input 
-                    type="file" 
-                    ref={fileInputRef}
-                    accept=".geojson,.json"
-                    style={{ display: 'none' }}
-                    onChange={handleImportGeoJSON}
-                  />
-                </label>
-              </button>
+            <div className="action-grid row g-2">
+              <div className="col-6">
+                <button className="secondary-btn btn w-100 border border-glass py-2" onClick={handleExportGeoJSON}>
+                  <Download size={14} className="me-1" /> Export
+                </button>
+              </div>
+              <div className="col-6">
+                <button className="secondary-btn btn w-100 border border-glass py-2">
+                  <label className="import-btn-label m-0 d-flex align-items-center justify-content-center w-100 cursor-pointer">
+                    <Upload size={14} className="me-1" /> Import
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      accept=".geojson,.json"
+                      style={{ display: 'none' }}
+                      onChange={handleImportGeoJSON}
+                    />
+                  </label>
+                </button>
+              </div>
             </div>
 
-            <button className="danger-btn" style={{ width: '100%' }} onClick={handleClearMap}>
-              <Trash2 size={14} /> Clear Active Map
+            <button className="danger-btn btn w-100 mt-1 py-2" onClick={handleClearMap}>
+              <Trash2 size={14} className="me-1" /> Clear Active Map
             </button>
           </div>
 
-          <div className="info-banner">
-            <Info size={16} className="info-banner-icon" />
-            <div>
+          <div className="info-banner p-3 rounded border border-glass d-flex gap-2">
+            <Info size={16} className="text-info mt-1 flex-shrink-0" />
+            <div className="small text-secondary">
               <strong>Quick Guide:</strong><br />
               • <em>Navigate</em>: zoom and inspect details.<br />
-              • <em>Add Marker</em>: click map to pin point.<br />
-              • <em>Draw Poly</em>: click map to build vertices. Area renders automatically if vertices ≥ 3.
+              • <em>Marker</em>: click map to pin points.<br />
+              • <em>Draw</em>: click map to build polygon vertices.
             </div>
           </div>
         </div>
       </aside>
 
-      <MapContainer 
-        markers={markers}
-        polygonVertices={polygonVertices}
-        interactionMode={interactionMode}
-        onAddMarker={handleAddMarker}
-        onAddVertex={handleAddVertex}
-        flyToCoords={flyToCoords}
-        onResetFlyTo={handleResetFlyTo}
-      />
+      <div className="flex-grow-1 h-100 w-100 position-relative">
+        <MapContainer 
+          markers={markers}
+          polygonVertices={polygonVertices}
+          interactionMode={interactionMode}
+          onAddMarker={handleAddMarker}
+          onAddVertex={handleAddVertex}
+          flyToCoords={flyToCoords}
+          onResetFlyTo={handleResetFlyTo}
+        />
+      </div>
 
       {toastMessage && (
-        <div className="toast">
+        <div className="toast position-absolute bottom-0 end-0 m-3 d-flex align-items-center gap-2 p-2 px-3 rounded bg-glass border border-glass-active z-3 shadow-lg">
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent-cyan)', boxShadow: 'var(--glow-cyan)' }} />
-          <span>{toastMessage}</span>
+          <span className="small text-white">{toastMessage}</span>
         </div>
       )}
     </div>

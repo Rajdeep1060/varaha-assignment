@@ -55,7 +55,7 @@ const MapContainer = ({
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: freeMapStyle,
-      center: [8.5417, 47.3769], // Zurich, Switzerland
+      center: [77.7125, 12.9645],
       zoom: 13,
       antialias: true
     });
