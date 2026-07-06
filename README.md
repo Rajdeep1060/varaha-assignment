@@ -4,7 +4,8 @@ VaraMap Studio is an interactive, responsive, high-aesthetic React web applicati
 
 ---
 
-<img width="1920" height="1080" alt="Screenshot 2026-07-06 193031" src="https://github.com/user-attachments/assets/887d6548-fb9a-4ff1-ad3e-576a61cf44d6" />
+<img width="1920" height="1017" alt="Screenshot 2026-07-06 193031" src="https://github.com/user-attachments/assets/7cf1aae2-3559-45ba-9d91-b0b7ccb98518" />
+
 
 
 ## Key Features
