@@ -43,6 +43,8 @@ const MapContainer = ({
   const interactionModeRef = useRef(interactionMode);
   const latestMarkersRef = useRef(markers);
   const polygonVerticesRef = useRef(polygonVertices);
+  const onAddMarkerRef = useRef(onAddMarker);
+  const onAddVertexRef = useRef(onAddVertex);
 
   useEffect(() => {
     interactionModeRef.current = interactionMode;
@@ -55,6 +57,11 @@ const MapContainer = ({
   useEffect(() => {
     polygonVerticesRef.current = polygonVertices;
   }, [polygonVertices]);
+
+  useEffect(() => {
+    onAddMarkerRef.current = onAddMarker;
+    onAddVertexRef.current = onAddVertex;
+  }, [onAddMarker, onAddVertex]);
 
   const syncMarkers = useCallback((currentMarkers) => {
     const map = mapRef.current;
@@ -259,9 +266,9 @@ const MapContainer = ({
     map.on('click', (e) => {
       const mode = interactionModeRef.current;
       if (mode === 'marker') {
-        onAddMarker(e.lngLat.lng, e.lngLat.lat);
+        onAddMarkerRef.current(e.lngLat.lng, e.lngLat.lat);
       } else if (mode === 'polygon') {
-        onAddVertex(e.lngLat.lng, e.lngLat.lat);
+        onAddVertexRef.current(e.lngLat.lng, e.lngLat.lat);
       }
     });
 
@@ -274,7 +281,7 @@ const MapContainer = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onAddMarker, onAddVertex, setupMapLayers]);
+  }, [setupMapLayers]);
 
   useEffect(() => {
     syncMarkers(markers);

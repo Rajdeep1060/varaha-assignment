@@ -44,16 +44,16 @@ const useMapState = (fileInputRef) => {
     }
   }, [showToast]);
 
-  const handleSaveState = () => {
+  const handleSaveState = useCallback(() => {
     const stateToSave = {
       savedMarkers: markers,
       savedVertices: polygonVertices
     };
     localStorage.setItem('mapbox_map_state', JSON.stringify(stateToSave));
     showToast('Map state saved successfully!');
-  };
+  }, [markers, polygonVertices, showToast]);
 
-  const handleLoadState = () => {
+  const handleLoadState = useCallback(() => {
     const savedState = localStorage.getItem('mapbox_map_state');
     if (savedState) {
       try {
@@ -67,16 +67,16 @@ const useMapState = (fileInputRef) => {
     } else {
       showToast('No saved state found in LocalStorage');
     }
-  };
+  }, [showToast]);
 
-  const handleClearMap = () => {
+  const handleClearMap = useCallback(() => {
     setMarkers([]);
     setPolygonVertices([]);
     setPolygonArea(0);
     showToast('Map cleared');
-  };
+  }, [showToast]);
 
-  const handleAddMarker = (lng, lat) => {
+  const handleAddMarker = useCallback((lng, lat) => {
     const newMarker = {
       id: `marker-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       lng,
@@ -84,34 +84,34 @@ const useMapState = (fileInputRef) => {
     };
     setMarkers(prev => [...prev, newMarker]);
     showToast(`Marker added`);
-  };
+  }, [showToast]);
 
-  const handleAddVertex = (lng, lat) => {
+  const handleAddVertex = useCallback((lng, lat) => {
     setPolygonVertices(prev => [...prev, [lng, lat]]);
     showToast(`Polygon vertex added`);
-  };
+  }, [showToast]);
 
-  const handleDeleteMarker = (id, e) => {
+  const handleDeleteMarker = useCallback((id, e) => {
     e.stopPropagation();
     setMarkers(prev => prev.filter(m => m.id !== id));
     showToast('Marker removed');
-  };
+  }, [showToast]);
 
-  const handleDeleteVertex = (index, e) => {
+  const handleDeleteVertex = useCallback((index, e) => {
     e.stopPropagation();
     setPolygonVertices(prev => prev.filter((_, i) => i !== index));
     showToast('Vertex removed');
-  };
+  }, [showToast]);
 
-  const handleListItemClick = (lng, lat) => {
+  const handleListItemClick = useCallback((lng, lat) => {
     setFlyToCoords([lng, lat]);
-  };
+  }, []);
 
   const handleResetFlyTo = useCallback(() => {
     setFlyToCoords(null);
   }, []);
 
-  const handleExportGeoJSON = () => {
+  const handleExportGeoJSON = useCallback(() => {
     const features = [];
     markers.forEach((m, idx) => {
       features.push({
@@ -180,9 +180,9 @@ const useMapState = (fileInputRef) => {
     downloadAnchor.click();
     downloadAnchor.remove();
     showToast('Exported GeoJSON file');
-  };
+  }, [markers, polygonVertices, polygonArea, showToast]);
 
-  const handleImportGeoJSON = (e) => {
+  const handleImportGeoJSON = useCallback((e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -235,15 +235,15 @@ const useMapState = (fileInputRef) => {
     };
     reader.readAsText(file);
     e.target.value = null;
-  };
+  }, [showToast]);
 
-  const formatArea = (area) => {
+  const formatArea = useCallback((area) => {
     if (area === 0) return '0.00 m²';
     if (area < 1000000) {
       return `${area.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`;
     }
     return `${(area / 1000000).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })} km²`;
-  };
+  }, []);
 
   return {
     markers,
