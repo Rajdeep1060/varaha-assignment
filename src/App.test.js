@@ -9,6 +9,7 @@ jest.mock('maplibre-gl', () => {
       this.addSource = jest.fn();
       this.addLayer = jest.fn();
       this.remove = jest.fn();
+      this.isStyleLoaded = jest.fn(() => false);
       this.getSource = jest.fn();
     }
   }

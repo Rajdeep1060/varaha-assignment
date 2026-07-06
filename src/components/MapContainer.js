@@ -160,6 +160,78 @@ const MapContainer = ({
     verticesSource.setData(verticesGeoJson);
   }, []);
 
+  const setupMapLayers = useCallback((mapInstance) => {
+    if (mapInstance.getSource('polygon-source')) return;
+
+    mapInstance.addSource('polygon-source', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: []
+      }
+    });
+
+    mapInstance.addSource('vertices-source', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: []
+      }
+    });
+
+    mapInstance.addLayer({
+      id: 'polygon-fill',
+      type: 'fill',
+      source: 'polygon-source',
+      paint: {
+        'fill-color': '#7f00ff',
+        'fill-opacity': 0.18
+      },
+      filter: ['==', '$type', 'Polygon']
+    });
+
+    mapInstance.addLayer({
+      id: 'polygon-outline',
+      type: 'line',
+      source: 'polygon-source',
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      },
+      paint: {
+        'line-color': '#00f2fe',
+        'line-width': 3,
+        'line-opacity': 0.85
+      }
+    });
+
+    mapInstance.addLayer({
+      id: 'vertices-circle-glow',
+      type: 'circle',
+      source: 'vertices-source',
+      paint: {
+        'circle-radius': 8,
+        'circle-color': '#7f00ff',
+        'circle-opacity': 0.4,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#00f2fe'
+      }
+    });
+
+    mapInstance.addLayer({
+      id: 'vertices-circle-inner',
+      type: 'circle',
+      source: 'vertices-source',
+      paint: {
+        'circle-radius': 4,
+        'circle-color': '#ffffff'
+      }
+    });
+
+    updatePolygonLayers(polygonVerticesRef.current);
+    syncMarkers(latestMarkersRef.current);
+  }, [syncMarkers, updatePolygonLayers]);
+
   useEffect(() => {
     if (mapRef.current) return;
 
@@ -173,77 +245,16 @@ const MapContainer = ({
 
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
-    map.on('load', () => {
+    const handleLoad = () => {
       mapRef.current = map;
+      setupMapLayers(map);
+    };
 
-      map.addSource('polygon-source', {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: []
-        }
-      });
-
-      map.addSource('vertices-source', {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: []
-        }
-      });
-
-      map.addLayer({
-        id: 'polygon-fill',
-        type: 'fill',
-        source: 'polygon-source',
-        paint: {
-          'fill-color': '#7f00ff',
-          'fill-opacity': 0.18
-        },
-        filter: ['==', '$type', 'Polygon']
-      });
-
-      map.addLayer({
-        id: 'polygon-outline',
-        type: 'line',
-        source: 'polygon-source',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': '#00f2fe',
-          'line-width': 3,
-          'line-opacity': 0.85
-        }
-      });
-
-      map.addLayer({
-        id: 'vertices-circle-glow',
-        type: 'circle',
-        source: 'vertices-source',
-        paint: {
-          'circle-radius': 8,
-          'circle-color': '#7f00ff',
-          'circle-opacity': 0.4,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#00f2fe'
-        }
-      });
-
-      map.addLayer({
-        id: 'vertices-circle-inner',
-        type: 'circle',
-        source: 'vertices-source',
-        paint: {
-          'circle-radius': 4,
-          'circle-color': '#ffffff'
-        }
-      });
-
-      updatePolygonLayers(polygonVerticesRef.current);
-      syncMarkers(latestMarkersRef.current);
-    });
+    if (map.isStyleLoaded()) {
+      handleLoad();
+    } else {
+      map.on('load', handleLoad);
+    }
 
     map.on('click', (e) => {
       const mode = interactionModeRef.current;
@@ -263,7 +274,7 @@ const MapContainer = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [syncMarkers, updatePolygonLayers]);
+  }, [onAddMarker, onAddVertex, setupMapLayers]);
 
   useEffect(() => {
     syncMarkers(markers);
