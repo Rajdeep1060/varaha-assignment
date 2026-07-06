@@ -196,3 +196,19 @@
   background: rgba(239, 68, 68, 0.2);
   border-color: rgba(239, 68, 68, 0.4);
 }
+
+.sidebar {
+  height: 40vh;
+}
+
+.header-icon {
+  color: var(--accent-cyan);
+}
+
+.toast-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--accent-cyan);
+  box-shadow: var(--glow-cyan);
+}

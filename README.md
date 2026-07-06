@@ -39,6 +39,31 @@ VaraMap Studio is an interactive, responsive, high-aesthetic React web applicati
 
 ---
 
+## Project Structure
+
+This project follows React best practices by isolating business logic into a custom hook and partitioning layout segments into modular components:
+
+```
+src/
+├── components/          # Modular UI components
+│   ├── ActionPanel.js   # Save, Load, Import, and Export operations
+│   ├── InfoBanner.js    # Quick start instructions overlay
+│   ├── MapContainer.js  # Maplibre GL JS map canvas component
+│   ├── ModeSelector.js  # Interaction mode toggle (Navigate/Marker/Draw)
+│   ├── SidebarHeader.js # Sidebar title and app logo
+│   ├── StatsDisplay.js  # Placed markers count and Turf.js area display
+│   ├── TabsSection.js   # Marker and Vertex list coordinate trackers
+│   └── Toast.js         # Floating feedback popups
+├── hooks/
+│   └── useMapState.js   # Custom hook handling map state, LocalStorage, and Turf computations
+├── App.js               # Entry point (imports components and coordinates state)
+├── App.css              # Custom Glassmorphic styles
+├── index.js             # React DOM root setup & Bootstrap import
+└── index.css            # Base resets and global variable definitions
+```
+
+---
+
 ## Tech Stack
 - **Framework:** ReactJS
 - **Mapping Engine:** Maplibre GL JS (Open-source fork of Mapbox GL JS)
