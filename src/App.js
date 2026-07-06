@@ -28,8 +28,6 @@ const App = () => {
     handleDeleteVertex,
     handleListItemClick,
     handleResetFlyTo,
-    handleSaveState,
-    handleLoadState,
     handleExportGeoJSON,
     handleImportGeoJSON,
     handleClearMap,
@@ -60,8 +58,6 @@ const App = () => {
             handleDeleteVertex={handleDeleteVertex} 
           />
           <ActionPanel 
-            handleSaveState={handleSaveState} 
-            handleLoadState={handleLoadState} 
             handleExportGeoJSON={handleExportGeoJSON} 
             handleImportGeoJSON={handleImportGeoJSON} 
             handleClearMap={handleClearMap}

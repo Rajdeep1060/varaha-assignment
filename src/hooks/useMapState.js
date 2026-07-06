@@ -2,8 +2,28 @@ import { useState, useEffect, useCallback } from 'react';
 import * as turf from '@turf/turf';
 
 const useMapState = (fileInputRef) => {
-  const [markers, setMarkers] = useState([]);
-  const [polygonVertices, setPolygonVertices] = useState([]);
+  const [markers, setMarkers] = useState(() => {
+    try {
+      const savedState = localStorage.getItem('mapbox_map_state');
+      if (savedState) {
+        const { savedMarkers } = JSON.parse(savedState);
+        if (Array.isArray(savedMarkers)) return savedMarkers;
+      }
+    } catch (e) {}
+    return [];
+  });
+
+  const [polygonVertices, setPolygonVertices] = useState(() => {
+    try {
+      const savedState = localStorage.getItem('mapbox_map_state');
+      if (savedState) {
+        const { savedVertices } = JSON.parse(savedState);
+        if (Array.isArray(savedVertices)) return savedVertices;
+      }
+    } catch (e) {}
+    return [];
+  });
+
   const [interactionMode, setInteractionMode] = useState('navigation');
   const [activeTab, setActiveTab] = useState('markers');
   const [flyToCoords, setFlyToCoords] = useState(null);
@@ -33,41 +53,12 @@ const useMapState = (fileInputRef) => {
   }, []);
 
   useEffect(() => {
-    const savedState = localStorage.getItem('mapbox_map_state');
-    if (savedState) {
-      try {
-        const { savedMarkers, savedVertices } = JSON.parse(savedState);
-        if (Array.isArray(savedMarkers)) setMarkers(savedMarkers);
-        if (Array.isArray(savedVertices)) setPolygonVertices(savedVertices);
-        showToast('Restored last session map state');
-      } catch (e) {}
-    }
-  }, [showToast]);
-
-  const handleSaveState = useCallback(() => {
     const stateToSave = {
       savedMarkers: markers,
       savedVertices: polygonVertices
     };
     localStorage.setItem('mapbox_map_state', JSON.stringify(stateToSave));
-    showToast('Map state saved successfully!');
-  }, [markers, polygonVertices, showToast]);
-
-  const handleLoadState = useCallback(() => {
-    const savedState = localStorage.getItem('mapbox_map_state');
-    if (savedState) {
-      try {
-        const { savedMarkers, savedVertices } = JSON.parse(savedState);
-        setMarkers(savedMarkers || []);
-        setPolygonVertices(savedVertices || []);
-        showToast('Loaded saved map state');
-      } catch (e) {
-        showToast('Error loading saved state');
-      }
-    } else {
-      showToast('No saved state found in LocalStorage');
-    }
-  }, [showToast]);
+  }, [markers, polygonVertices]);
 
   const handleClearMap = useCallback(() => {
     setMarkers([]);
@@ -261,8 +252,6 @@ const useMapState = (fileInputRef) => {
     handleDeleteVertex,
     handleListItemClick,
     handleResetFlyTo,
-    handleSaveState,
-    handleLoadState,
     handleExportGeoJSON,
     handleImportGeoJSON,
     handleClearMap,

@@ -46,25 +46,21 @@ const MapContainer = ({
   const onAddMarkerRef = useRef(onAddMarker);
   const onAddVertexRef = useRef(onAddVertex);
 
-  useEffect(() => {
-    interactionModeRef.current = interactionMode;
-  }, [interactionMode]);
+  interactionModeRef.current = interactionMode;
+  latestMarkersRef.current = markers;
+  polygonVerticesRef.current = polygonVertices;
+  onAddMarkerRef.current = onAddMarker;
+  onAddVertexRef.current = onAddVertex;
 
-  useEffect(() => {
-    latestMarkersRef.current = markers;
-  }, [markers]);
+  const createMarkerElement = () => {
+    const el = document.createElement('div');
+    el.className = 'custom-marker';
+    el.style.cssText = 'width:20px;height:20px;background-color:#00f2fe;border-radius:50%;border:3px solid #fff;cursor:pointer;box-shadow:0 0 15px rgba(0,242,254,0.4)';
+    return el;
+  };
 
-  useEffect(() => {
-    polygonVerticesRef.current = polygonVertices;
-  }, [polygonVertices]);
-
-  useEffect(() => {
-    onAddMarkerRef.current = onAddMarker;
-    onAddVertexRef.current = onAddVertex;
-  }, [onAddMarker, onAddVertex]);
-
-  const syncMarkers = useCallback((currentMarkers) => {
-    const map = mapRef.current;
+  const syncMarkers = useCallback((currentMarkers, mapInstance) => {
+    const map = mapInstance || mapRef.current;
     if (!map) return;
 
     const currentMarkersMap = new Map(activeMarkersRef.current.map(m => [m.id, m.markerInstance]));
@@ -89,13 +85,10 @@ const MapContainer = ({
         newMarkersList.push({ id: marker.id, markerInstance });
         currentMarkersMap.delete(marker.id);
       } else {
-        const el = document.createElement('div');
-        el.className = 'custom-marker';
-
         const popup = new maplibregl.Popup({ offset: 15, closeButton: true })
           .setHTML(popupContent);
 
-        const markerInstance = new maplibregl.Marker({ element: el })
+        const markerInstance = new maplibregl.Marker({ element: createMarkerElement() })
           .setLngLat([marker.lng, marker.lat])
           .setPopup(popup)
           .addTo(map);
@@ -111,8 +104,8 @@ const MapContainer = ({
     activeMarkersRef.current = newMarkersList;
   }, []);
 
-  const updatePolygonLayers = useCallback((vertices) => {
-    const map = mapRef.current;
+  const updatePolygonLayers = useCallback((vertices, mapInstance) => {
+    const map = mapInstance || mapRef.current;
     if (!map) return;
 
     const polygonSource = map.getSource('polygon-source');
@@ -127,18 +120,12 @@ const MapContainer = ({
     if (vertices.length === 1) {
       polygonGeoJson.features.push({
         type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: vertices[0]
-        }
+        geometry: { type: 'Point', coordinates: vertices[0] }
       });
     } else if (vertices.length === 2) {
       polygonGeoJson.features.push({
         type: 'Feature',
-        geometry: {
-          type: 'LineString',
-          coordinates: vertices
-        }
+        geometry: { type: 'LineString', coordinates: vertices }
       });
     } else if (vertices.length >= 3) {
       polygonGeoJson.features.push({
@@ -152,48 +139,34 @@ const MapContainer = ({
 
     polygonSource.setData(polygonGeoJson);
 
-    const verticesGeoJson = {
+    verticesSource.setData({
       type: 'FeatureCollection',
       features: vertices.map((v, i) => ({
         type: 'Feature',
         properties: { index: i },
-        geometry: {
-          type: 'Point',
-          coordinates: v
-        }
+        geometry: { type: 'Point', coordinates: v }
       }))
-    };
-
-    verticesSource.setData(verticesGeoJson);
+    });
   }, []);
 
-  const setupMapLayers = useCallback((mapInstance) => {
+  const setupMapSources = useCallback((mapInstance) => {
     if (mapInstance.getSource('polygon-source')) return;
 
     mapInstance.addSource('polygon-source', {
       type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: []
-      }
+      data: { type: 'FeatureCollection', features: [] }
     });
 
     mapInstance.addSource('vertices-source', {
       type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: []
-      }
+      data: { type: 'FeatureCollection', features: [] }
     });
 
     mapInstance.addLayer({
       id: 'polygon-fill',
       type: 'fill',
       source: 'polygon-source',
-      paint: {
-        'fill-color': '#7f00ff',
-        'fill-opacity': 0.18
-      },
+      paint: { 'fill-color': '#7f00ff', 'fill-opacity': 0.18 },
       filter: ['==', '$type', 'Polygon']
     });
 
@@ -201,15 +174,8 @@ const MapContainer = ({
       id: 'polygon-outline',
       type: 'line',
       source: 'polygon-source',
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round'
-      },
-      paint: {
-        'line-color': '#00f2fe',
-        'line-width': 3,
-        'line-opacity': 0.85
-      }
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': '#00f2fe', 'line-width': 3, 'line-opacity': 0.85 }
     });
 
     mapInstance.addLayer({
@@ -229,15 +195,9 @@ const MapContainer = ({
       id: 'vertices-circle-inner',
       type: 'circle',
       source: 'vertices-source',
-      paint: {
-        'circle-radius': 4,
-        'circle-color': '#ffffff'
-      }
+      paint: { 'circle-radius': 4, 'circle-color': '#ffffff' }
     });
-
-    updatePolygonLayers(polygonVerticesRef.current);
-    syncMarkers(latestMarkersRef.current);
-  }, [syncMarkers, updatePolygonLayers]);
+  }, []);
 
   useEffect(() => {
     if (mapRef.current) return;
@@ -254,7 +214,14 @@ const MapContainer = ({
 
     const handleLoad = () => {
       mapRef.current = map;
-      setupMapLayers(map);
+      setupMapSources(map);
+
+      map.once('idle', () => {
+        if (!mapRef.current) return;
+        mapRef.current.resize();
+        updatePolygonLayers(polygonVerticesRef.current, mapRef.current);
+        syncMarkers(latestMarkersRef.current, mapRef.current);
+      });
     };
 
     if (map.isStyleLoaded()) {
@@ -281,7 +248,7 @@ const MapContainer = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setupMapLayers]);
+  }, [setupMapSources, syncMarkers, updatePolygonLayers]);
 
   useEffect(() => {
     syncMarkers(markers);
@@ -294,14 +261,7 @@ const MapContainer = ({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !flyToCoords) return;
-
-    map.flyTo({
-      center: flyToCoords,
-      zoom: 15,
-      essential: true,
-      duration: 1800
-    });
-
+    map.flyTo({ center: flyToCoords, zoom: 15, essential: true, duration: 1800 });
     onResetFlyTo();
   }, [flyToCoords, onResetFlyTo]);
 

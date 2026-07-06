@@ -23,10 +23,10 @@ VaraMap Studio is an interactive, responsive, high-aesthetic React web applicati
 - **Real-time Area Calculation:** Automatically processes the coordinates with Turf.js (`turf.polygon`, `turf.area`) to output the surface area in real-time in square meters ($m^2$) or square kilometers ($km^2$) if the area is large.
 - **Individual Deletion:** Remove specific vertices from the list to modify shape points in real-time.
 
-### 4. Cache Persistence (Save & Load)
-- **Automatic Restore:** Re-reads the browser cache (`localStorage`) on startup and restores the markers, polygon vertices, and map center coordinates from your last session.
-- **Manual Operations:** Access manual **Save** and **Load** triggers in the actions panel to backup or revert changes.
-- **Clear Canvas:** Single-click "Clear Active Map" clears all active markers, polygon overlays, and stats.
+### 4. Cache Persistence (Autosave & Auto-restore)
+- **Background Autosave:** Automatically updates and saves the map state (markers and polygon vertices) in the browser's `localStorage` cache in real-time as you add, modify, or delete elements.
+- **Automatic Restoration:** Re-reads the browser cache on startup and instantly restores the last session's active markers, polygon vertices, and map center coordinates, providing a seamless user experience.
+- **Clear Canvas:** Single-click "Clear Active Map" clears all active markers, polygon overlays, and stats from both the screen and the local cache.
 
 ### 5. GeoJSON Interoperability (Bonus Features)
 - **GeoJSON Export:** Downloads a compiled `.geojson` file representing the current map features (Points for markers, and LineString/Polygon for drawn shapes) directly to your local computer.

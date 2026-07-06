@@ -1,9 +1,7 @@
 import React from 'react';
-import { Save, RefreshCw, Download, Upload, Trash2 } from 'lucide-react';
+import { Download, Upload, Trash2 } from 'lucide-react';
 
 const ActionPanel = ({
-  handleSaveState,
-  handleLoadState,
   handleExportGeoJSON,
   handleImportGeoJSON,
   handleClearMap,
@@ -12,19 +10,6 @@ const ActionPanel = ({
   return (
     <div className="control-card p-3 rounded bg-glass border border-glass d-flex flex-column gap-2">
       <span className="card-title text-secondary small fw-bold text-uppercase tracking-wider">Actions & Operations</span>
-      
-      <div className="action-grid row g-2">
-        <div className="col-6">
-          <button className="secondary-btn btn w-100 border border-glass py-2" onClick={handleSaveState}>
-            <Save size={14} className="me-1" /> Save
-          </button>
-        </div>
-        <div className="col-6">
-          <button className="secondary-btn btn w-100 border border-glass py-2" onClick={handleLoadState}>
-            <RefreshCw size={14} className="me-1" /> Load
-          </button>
-        </div>
-      </div>
 
       <div className="action-grid row g-2">
         <div className="col-6">
