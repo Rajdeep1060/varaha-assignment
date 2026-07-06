@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -39,12 +39,126 @@ const MapContainer = ({
 }) => {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
-  const markersRef = useRef([]);
+  const activeMarkersRef = useRef([]);
   const interactionModeRef = useRef(interactionMode);
+  const latestMarkersRef = useRef(markers);
+  const polygonVerticesRef = useRef(polygonVertices);
 
   useEffect(() => {
     interactionModeRef.current = interactionMode;
   }, [interactionMode]);
+
+  useEffect(() => {
+    latestMarkersRef.current = markers;
+  }, [markers]);
+
+  useEffect(() => {
+    polygonVerticesRef.current = polygonVertices;
+  }, [polygonVertices]);
+
+  const syncMarkers = useCallback((currentMarkers) => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const currentMarkersMap = new Map(activeMarkersRef.current.map(m => [m.id, m.markerInstance]));
+    const newMarkersList = [];
+
+    currentMarkers.forEach((marker, index) => {
+      const popupContent = `
+        <div>
+          <div class="popup-title">Marker #${index + 1}</div>
+          <span class="popup-coords">
+            Lng: ${marker.lng.toFixed(6)}<br/>
+            Lat: ${marker.lat.toFixed(6)}
+          </span>
+        </div>
+      `;
+
+      if (currentMarkersMap.has(marker.id)) {
+        const markerInstance = currentMarkersMap.get(marker.id);
+        markerInstance.setLngLat([marker.lng, marker.lat]);
+        const popup = markerInstance.getPopup();
+        if (popup) popup.setHTML(popupContent);
+        newMarkersList.push({ id: marker.id, markerInstance });
+        currentMarkersMap.delete(marker.id);
+      } else {
+        const el = document.createElement('div');
+        el.className = 'custom-marker';
+
+        const popup = new maplibregl.Popup({ offset: 15, closeButton: true })
+          .setHTML(popupContent);
+
+        const markerInstance = new maplibregl.Marker({ element: el })
+          .setLngLat([marker.lng, marker.lat])
+          .setPopup(popup)
+          .addTo(map);
+
+        newMarkersList.push({ id: marker.id, markerInstance });
+      }
+    });
+
+    currentMarkersMap.forEach((markerInstance) => {
+      markerInstance.remove();
+    });
+
+    activeMarkersRef.current = newMarkersList;
+  }, []);
+
+  const updatePolygonLayers = useCallback((vertices) => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const polygonSource = map.getSource('polygon-source');
+    const verticesSource = map.getSource('vertices-source');
+    if (!polygonSource || !verticesSource) return;
+
+    let polygonGeoJson = {
+      type: 'FeatureCollection',
+      features: []
+    };
+
+    if (vertices.length === 1) {
+      polygonGeoJson.features.push({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: vertices[0]
+        }
+      });
+    } else if (vertices.length === 2) {
+      polygonGeoJson.features.push({
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: vertices
+        }
+      });
+    } else if (vertices.length >= 3) {
+      polygonGeoJson.features.push({
+        type: 'Feature',
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[...vertices, vertices[0]]]
+        }
+      });
+    }
+
+    polygonSource.setData(polygonGeoJson);
+
+    const verticesGeoJson = {
+      type: 'FeatureCollection',
+      features: vertices.map((v, i) => ({
+        type: 'Feature',
+        properties: { index: i },
+        geometry: {
+          type: 'Point',
+          coordinates: v
+        }
+      }))
+    };
+
+    verticesSource.setData(verticesGeoJson);
+  }, []);
 
   useEffect(() => {
     if (mapRef.current) return;
@@ -127,7 +241,8 @@ const MapContainer = ({
         }
       });
 
-      updatePolygonLayers(polygonVertices);
+      updatePolygonLayers(polygonVerticesRef.current);
+      syncMarkers(latestMarkersRef.current);
     });
 
     map.on('click', (e) => {
@@ -141,122 +256,22 @@ const MapContainer = ({
 
     return () => {
       if (mapRef.current) {
-        markersRef.current.forEach(({ markerInstance }) => markerInstance.remove());
-        markersRef.current = [];
+        activeMarkersRef.current.forEach(({ markerInstance }) => markerInstance.remove());
+        activeMarkersRef.current = [];
         mapRef.current.remove();
         mapRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [syncMarkers, updatePolygonLayers]);
 
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    const currentMarkersMap = new Map(markersRef.current.map(m => [m.id, m.markerInstance]));
-    const newMarkersList = [];
-
-    markers.forEach((marker, index) => {
-      const popupContent = `
-        <div>
-          <div class="popup-title">Marker #${index + 1}</div>
-          <span class="popup-coords">
-            Lng: ${marker.lng.toFixed(6)}<br/>
-            Lat: ${marker.lat.toFixed(6)}
-          </span>
-        </div>
-      `;
-
-      if (currentMarkersMap.has(marker.id)) {
-        const markerInstance = currentMarkersMap.get(marker.id);
-        markerInstance.setLngLat([marker.lng, marker.lat]);
-        const popup = markerInstance.getPopup();
-        if (popup) popup.setHTML(popupContent);
-        newMarkersList.push({ id: marker.id, markerInstance });
-        currentMarkersMap.delete(marker.id);
-      } else {
-        const el = document.createElement('div');
-        el.className = 'custom-marker';
-
-        const popup = new maplibregl.Popup({ offset: 15, closeButton: true })
-          .setHTML(popupContent);
-
-        const markerInstance = new maplibregl.Marker({ element: el })
-          .setLngLat([marker.lng, marker.lat])
-          .setPopup(popup)
-          .addTo(map);
-
-        newMarkersList.push({ id: marker.id, markerInstance });
-      }
-    });
-
-    currentMarkersMap.forEach((markerInstance) => {
-      markerInstance.remove();
-    });
-
-    markersRef.current = newMarkersList;
-  }, [markers]);
-
-  const updatePolygonLayers = (vertices) => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    const polygonSource = map.getSource('polygon-source');
-    const verticesSource = map.getSource('vertices-source');
-    if (!polygonSource || !verticesSource) return;
-
-    let polygonGeoJson = {
-      type: 'FeatureCollection',
-      features: []
-    };
-
-    if (vertices.length === 1) {
-      polygonGeoJson.features.push({
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: vertices[0]
-        }
-      });
-    } else if (vertices.length === 2) {
-      polygonGeoJson.features.push({
-        type: 'Feature',
-        geometry: {
-          type: 'LineString',
-          coordinates: vertices
-        }
-      });
-    } else if (vertices.length >= 3) {
-      polygonGeoJson.features.push({
-        type: 'Feature',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [[...vertices, vertices[0]]]
-        }
-      });
-    }
-
-    polygonSource.setData(polygonGeoJson);
-
-    const verticesGeoJson = {
-      type: 'FeatureCollection',
-      features: vertices.map((v, i) => ({
-        type: 'Feature',
-        properties: { index: i },
-        geometry: {
-          type: 'Point',
-          coordinates: v
-        }
-      }))
-    };
-
-    verticesSource.setData(verticesGeoJson);
-  };
+    syncMarkers(markers);
+  }, [markers, syncMarkers]);
 
   useEffect(() => {
     updatePolygonLayers(polygonVertices);
-  }, [polygonVertices]);
+  }, [polygonVertices, updatePolygonLayers]);
 
   useEffect(() => {
     const map = mapRef.current;
